@@ -7,6 +7,7 @@ import TopChannelsCard from '../components/TopChannelsCard.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Link } from 'react-router-dom'
+import { apiFetch } from '../lib/api.js'
 
 function formatCurrency(amount, currency = 'USD') {
   if (amount == null || Number.isNaN(amount)) return '—'
@@ -70,9 +71,9 @@ export default function Dashboard() {
         const qs = `?tenantId=${tenantId}&days=30`
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
         const [dashboardRes, productsRes, channelsRes] = await Promise.all([
-          fetch(`/api/dashboard${qs}`, { headers }),
-          fetch(`/api/products/profitability${qs}`, { headers }),
-          fetch(`/api/analytics/channels${qs}&limit=8`, { headers }),
+          apiFetch(`/api/dashboard${qs}`, { headers }),
+          apiFetch(`/api/products/profitability${qs}`, { headers }),
+          apiFetch(`/api/analytics/channels${qs}&limit=8`, { headers }),
         ])
 
         if (!dashboardRes.ok || !productsRes.ok || !channelsRes.ok) {

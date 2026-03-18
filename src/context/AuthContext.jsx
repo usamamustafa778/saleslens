@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { apiFetch } from '../lib/api.js'
 
 const AuthContext = createContext(null)
 
@@ -19,7 +20,7 @@ export function AuthProvider({ children }) {
         return
       }
       try {
-        const res = await fetch('/api/auth/me', {
+        const res = await apiFetch('/api/auth/me', {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) throw new Error()

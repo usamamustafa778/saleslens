@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import LayoutShell from '../components/LayoutShell.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/api.js'
 import {
   CartesianGrid,
   Legend,
@@ -43,7 +44,7 @@ export default function ChannelDetailPage() {
         setLoading(true)
         setError(null)
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/analytics/channels/${encodeURIComponent(channel)}?tenantId=${tenantId}`,
           { headers },
         )

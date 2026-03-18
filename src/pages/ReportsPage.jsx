@@ -4,6 +4,7 @@ import ReportFilters from '../components/ReportFilters.jsx'
 import ExportButton from '../components/ExportButton.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { apiFetch } from '../lib/api.js'
 
 const PAGE_SIZE = 20
 
@@ -42,7 +43,7 @@ export default function ReportsPage() {
         if (filters.channel) params.append('channel', filters.channel)
         if (filters.query) params.append('query', filters.query)
 
-        const res = await fetch(`/api/reports?${params.toString()}`, {
+        const res = await apiFetch(`/api/reports?${params.toString()}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
 
@@ -127,7 +128,7 @@ export default function ReportsPage() {
       if (filters.channel) params.append('channel', filters.channel)
       if (filters.query) params.append('query', filters.query)
 
-      const res = await fetch(`/api/reports/export?${params.toString()}`, {
+      const res = await apiFetch(`/api/reports/export?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (!res.ok) throw new Error('Export failed')

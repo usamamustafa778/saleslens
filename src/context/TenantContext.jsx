@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { apiFetch } from '../lib/api.js'
 
 const TenantContext = createContext(null)
 
@@ -20,7 +21,7 @@ export function TenantProvider({ children }) {
       try {
         setLoading(true)
         const token = window.localStorage.getItem('authToken')
-        const res = await fetch('/api/tenants', {
+        const res = await apiFetch('/api/tenants', {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
 
@@ -52,7 +53,7 @@ export function TenantProvider({ children }) {
 
     try {
       const token = window.localStorage.getItem('authToken')
-      await fetch('/api/tenant/switch', {
+      await apiFetch('/api/tenant/switch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
