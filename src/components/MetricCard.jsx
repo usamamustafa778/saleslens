@@ -14,9 +14,15 @@ export default function MetricCard({
       'border-rose-200 bg-rose-50/80 shadow-rose-100/60 dark:border-rose-900/60 dark:bg-rose-950/40',
   }
 
+  const isPrimary = label.toLowerCase() === 'net profit'
+
   return (
     <article
-      className={`group rounded-xl border p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-md dark:shadow-none ${toneClasses[tone]}`}
+      className={`group rounded-xl border p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-md dark:shadow-none ${
+        isPrimary
+          ? 'border-emerald-200 bg-emerald-50 shadow-emerald-100/70 dark:border-emerald-900/60 dark:bg-emerald-950/40'
+          : toneClasses[tone]
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -31,8 +37,14 @@ export default function MetricCard({
           )}
         </div>
         {Icon && (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900/5 text-slate-500 group-hover:bg-slate-900/10 dark:bg-slate-50/5 dark:text-slate-300">
-            <Icon className="h-4 w-4" aria-hidden="true" />
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 transition ${
+              isPrimary
+                ? 'bg-emerald-500/10 text-emerald-700 ring-emerald-200 group-hover:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-900/60'
+                : 'bg-slate-900/5 text-slate-600 ring-slate-200 group-hover:bg-slate-900/10 dark:bg-slate-50/5 dark:text-slate-300 dark:ring-slate-800'
+            }`}
+          >
+            <Icon className={`h-4 w-4 ${isPrimary ? 'h-5 w-5' : ''}`} aria-hidden="true" />
           </div>
         )}
       </div>

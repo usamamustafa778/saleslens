@@ -79,33 +79,62 @@ export default function TopChannelsCard({ channels, loading }) {
 
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         <div className="h-64 overflow-hidden rounded-lg border border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="channel"
-                tick={{ fontSize: 10, fill: '#6b7280' }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: '#6b7280' }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 8,
-                  borderColor: '#e5e7eb',
-                  fontSize: 12,
-                }}
-                formatter={(value, name) => [formatMoney(value), name]}
-              />
-              <Legend />
-              <Bar dataKey="revenue" name="Revenue" fill="#22c55e" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="netProfit" name="Net profit" fill="#0f766e" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="flex h-full flex-col justify-center gap-3 px-4">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <div key={idx} className="h-3 w-full animate-pulse rounded-full bg-slate-200/80 dark:bg-slate-800/60" />
+              ))}
+              <p className="mt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                Loading channels…
+              </p>
+            </div>
+          ) : data.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                No channel data yet
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Import orders to see revenue and profit by channel.
+              </p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ top: 16, right: 16, left: 16, bottom: 0 }}
+                barCategoryGap={10}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 10, fill: '#6b7280' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="channel"
+                  width={72}
+                  tick={{ fontSize: 10, fill: '#6b7280' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    borderColor: '#e5e7eb',
+                    fontSize: 12,
+                  }}
+                  formatter={(value, name) => [formatMoney(value), name]}
+                />
+                <Legend />
+                <Bar dataKey="revenue" name="Revenue" fill="#4f46e5" radius={[6, 6, 6, 6]} />
+                <Bar dataKey="netProfit" name="Net profit" fill="#10b981" radius={[6, 6, 6, 6]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         <div className="overflow-hidden rounded-lg border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">

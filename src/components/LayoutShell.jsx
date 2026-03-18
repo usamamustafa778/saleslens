@@ -2,21 +2,37 @@ import DashboardHeader from './DashboardHeader.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { NavLink } from 'react-router-dom'
+import {
+  BarChart3,
+  Box,
+  ClipboardList,
+  Megaphone,
+  ScrollText,
+  LogOut,
+  ChevronDown,
+} from 'lucide-react'
 
-function NavItem({ to, children }) {
+function NavItem({ to, icon: Icon, children }) {
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
         [
-          'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left',
+          'group flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition',
           isActive
-            ? 'bg-slate-900 text-slate-50'
-            : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-50',
+            ? 'bg-white/10 text-white shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset]'
+            : 'text-slate-300/80 hover:bg-white/5 hover:text-white',
         ].join(' ')
       }
     >
-      <span>{children}</span>
+      <span className="flex items-center gap-2">
+        {Icon && (
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-slate-200/90 ring-1 ring-white/5 group-hover:bg-white/10">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </span>
+        )}
+        <span className="text-sm font-medium">{children}</span>
+      </span>
       {({ isActive }) =>
         isActive ? <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> : null
       }
@@ -37,54 +53,83 @@ export default function LayoutShell({
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-50">
-      <aside className="hidden w-64 flex-col border-r border-slate-800 bg-slate-950/95 px-5 py-6 sm:flex">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
-            <span className="text-sm font-semibold">PD</span>
+      <aside className="hidden w-72 flex-col border-r border-white/5 bg-[#0f172a] px-5 py-6 sm:flex">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-400/20">
+            <span className="text-sm font-semibold tracking-tight">PD</span>
           </div>
-          <div>
-            <p className="text-sm font-semibold tracking-tight text-slate-50">
+          <div className="leading-tight">
+            <p className="text-sm font-semibold tracking-tight text-white">
               ProfitDesk
             </p>
-            <p className="text-[11px] text-slate-500">Profit intelligence</p>
+            <p className="text-[11px] text-slate-400">Profit intelligence</p>
           </div>
         </div>
 
-        <nav className="space-y-1 text-sm">
-          <NavItem to="/dashboard">Dashboard</NavItem>
-          <NavItem to="/products">Products</NavItem>
-          <NavItem to="/orders">Orders</NavItem>
-          <NavItem to="/ad-spend">Ad spend</NavItem>
-          <NavItem to="/reports">Reports</NavItem>
+        <nav className="space-y-1">
+          <NavItem to="/dashboard" icon={BarChart3}>
+            Dashboard
+          </NavItem>
+          <NavItem to="/products" icon={Box}>
+            Products
+          </NavItem>
+          <NavItem to="/orders" icon={ClipboardList}>
+            Orders
+          </NavItem>
+          <NavItem to="/ad-spend" icon={Megaphone}>
+            Ad spend
+          </NavItem>
+          <NavItem to="/reports" icon={ScrollText}>
+            Reports
+          </NavItem>
         </nav>
 
-        <div className="mt-auto pt-4 text-[11px] text-slate-500">
-          <p className="mb-2 truncate text-slate-400">
-            {user ? user.email : 'Not signed in'}
-          </p>
-          <button
-            type="button"
-            onClick={logout}
-            className="mb-3 w-full rounded-md border border-slate-800 px-2 py-1 text-left text-[11px] text-slate-300 hover:bg-slate-900"
-          >
-            Logout
-          </button>
-          <p className="font-medium text-slate-400">Workspace</p>
-          <select
-            className="mt-1 w-full rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-[11px] text-slate-100"
-            value={tenantId}
-            onChange={(e) => switchTenant(Number(e.target.value))}
-          >
-            {tenants.length === 0 ? (
-              <option value={tenantId}>{activeName}</option>
-            ) : (
-              tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </option>
-              ))
-            )}
-          </select>
+        <div className="mt-auto pt-5">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  Workspace
+                </p>
+                <p className="mt-0.5 truncate text-xs font-medium text-white/90">
+                  {activeName}
+                </p>
+              </div>
+              <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            </div>
+            <select
+              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-white/90 outline-none ring-emerald-500/30 focus:ring-2"
+              value={tenantId}
+              onChange={(e) => switchTenant(Number(e.target.value))}
+            >
+              {tenants.length === 0 ? (
+                <option value={tenantId}>{activeName}</option>
+              ) : (
+                tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </option>
+                ))
+              )}
+            </select>
+
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] text-slate-300/80">
+                  {user ? user.email : 'Not signed in'}
+                </p>
+                <p className="text-[10px] text-slate-400">Signed in</p>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white/90 transition hover:bg-white/10"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
 
