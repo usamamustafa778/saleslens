@@ -16,6 +16,9 @@ lerna-debug.log*
 .env.*
 *.local
 
+# Allow committed production API base for Vite builds (non-secret).
+!.env.production
+
 # Node
 node_modules/
 .npm/
