@@ -6,6 +6,8 @@ import SignupPage from './pages/SignupPage.jsx'
 import ProductsPage from './pages/ProductsPage.jsx'
 import OrdersPage from './pages/OrdersPage.jsx'
 import AdSpendPage from './pages/AdSpendPage.jsx'
+import ChannelDetailPage from './pages/ChannelDetailPage.jsx'
+import ProductDetailPage from './pages/ProductDetailPage.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
 import { TenantProvider } from './context/TenantContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
@@ -56,6 +58,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <AdSpendPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/channels/:channel"
+              element={
+                <PrivateRoute>
+                  <ChannelDetailPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products/:sku"
+              element={
+                <PrivateRoute>
+                  <ProductDetailPage />
                 </PrivateRoute>
               }
             />

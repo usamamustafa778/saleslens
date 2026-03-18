@@ -3,8 +3,10 @@ import { DollarSign, Megaphone, Package, TrendingUp } from 'lucide-react'
 import MetricCard from '../components/MetricCard.jsx'
 import SalesTrendChart from '../components/SalesTrendChart.jsx'
 import LayoutShell from '../components/LayoutShell.jsx'
+import TopChannelsCard from '../components/TopChannelsCard.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { Link } from 'react-router-dom'
 
 function formatCurrency(amount, currency = 'USD') {
   if (amount == null || Number.isNaN(amount)) return '—'
@@ -18,6 +20,7 @@ function formatCurrency(amount, currency = 'USD') {
 export default function Dashboard() {
   const { tenantId } = useTenant()
   const { token } = useAuth()
+  const [productQuery, setProductQuery] = useState('')
   const [metrics, setMetrics] = useState({
     revenue: 0,
     cogs: 0,
@@ -28,8 +31,33 @@ export default function Dashboard() {
 
   const [trend, setTrend] = useState([])
   const [products, setProducts] = useState([])
+  const [channels, setChannels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const filteredProducts = useMemo(() => {
+    const q = productQuery.trim().toLowerCase()
+    if (!q) return products
+    return (products || []).filter((p) => {
+      const sku = String(p.sku || '')
+      const name = String(p.name || '')
+      return `${sku} ${name}`.toLowerCase().includes(q)
+    })
+  }, [products, productQuery])
+
+  const topProducts = useMemo(
+    () => [...(filteredProducts || [])].sort((a, b) => (b.revenue ?? 0) - (a.revenue ?? 0)).slice(0, 10),
+    [filteredProducts],
+  )
+
+  const worstProducts = useMemo(
+    () =>
+      [...(filteredProducts || [])]
+        .filter((p) => (p.revenue ?? 0) > 0)
+        .sort((a, b) => (a.marginPercent ?? 0) - (b.marginPercent ?? 0))
+        .slice(0, 10),
+    [filteredProducts],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -39,25 +67,28 @@ export default function Dashboard() {
         setLoading(true)
         setError(null)
 
-        const qs = `?tenantId=${tenantId}`
+        const qs = `?tenantId=${tenantId}&days=30`
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const [summaryRes, trendRes, productsRes] = await Promise.all([
-          fetch(`/api/dashboard/summary${qs}`, { headers }),
-          fetch(`/api/dashboard/trend${qs}`, { headers }),
+        const [dashboardRes, productsRes, channelsRes] = await Promise.all([
+          fetch(`/api/dashboard${qs}`, { headers }),
           fetch(`/api/products/profitability${qs}`, { headers }),
+          fetch(`/api/analytics/channels${qs}&limit=8`, { headers }),
         ])
 
-        if (!summaryRes.ok || !trendRes.ok || !productsRes.ok) {
+        if (!dashboardRes.ok || !productsRes.ok || !channelsRes.ok) {
           throw new Error('Failed to load dashboard data')
         }
 
-        const [summaryJson, trendJson, productsJson] = await Promise.all([
-          summaryRes.json(),
-          trendRes.json(),
+        const [dashboardJson, productsJson, channelsJson] = await Promise.all([
+          dashboardRes.json(),
           productsRes.json(),
+          channelsRes.json(),
         ])
 
         if (cancelled) return
+
+        const summaryJson = dashboardJson.summary || {}
+        const trendJson = { trend: dashboardJson.trend || [] }
 
         setMetrics({
           revenue: summaryJson.revenue ?? 0,
@@ -75,6 +106,7 @@ export default function Dashboard() {
         setTrend(trendPoints)
 
         setProducts(productsJson.products || [])
+        setChannels(channelsJson.channels || [])
       } catch (err) {
         setError(err.message || 'Something went wrong while loading the dashboard')
       } finally {
@@ -106,9 +138,10 @@ export default function Dashboard() {
             <div className="relative flex-1">
               <input
                 type="search"
-                placeholder="Search products (coming soon)…"
+                placeholder="Search products by SKU or name…"
                 className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50/80 px-3 text-xs text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100 dark:focus:border-emerald-400 dark:focus:ring-emerald-900/50"
-                disabled
+                value={productQuery}
+                onChange={(e) => setProductQuery(e.target.value)}
               />
             </div>
           </div>
@@ -159,6 +192,154 @@ export default function Dashboard() {
 
         <SalesTrendChart points={trend} loading={loading} />
 
+        <TopChannelsCard channels={channels} loading={loading} />
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-50">
+                  Top products
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Highest revenue SKUs (filtered by your search).
+                </p>
+              </div>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                Showing {topProducts.length}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-xs">
+                <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  <tr>
+                    <th className="py-2 pr-4">SKU</th>
+                    <th className="py-2 pr-4">Name</th>
+                    <th className="py-2 pr-4 text-right">Revenue</th>
+                    <th className="py-2 pr-2 text-right">Margin %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topProducts.map((product) => (
+                    <tr
+                      key={product.productId ?? product.sku ?? product.name}
+                      className="border-b border-slate-100 text-[11px] last:border-0 dark:border-slate-800"
+                    >
+                      <td className="py-2 pr-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                        {product.sku ? (
+                          <Link
+                            to={`/products/${encodeURIComponent(product.sku)}`}
+                            className="text-emerald-700 hover:underline dark:text-emerald-400"
+                          >
+                            {product.sku}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-slate-700 dark:text-slate-200">
+                        {product.name}
+                      </td>
+                      <td className="py-2 pr-4 text-right text-slate-700 dark:text-slate-200">
+                        {formatCurrency(product.revenue)}
+                      </td>
+                      <td className="py-2 pr-2 text-right text-slate-700 dark:text-slate-200">
+                        {product.marginPercent?.toFixed(1) ?? '0.0'}%
+                      </td>
+                    </tr>
+                  ))}
+                  {topProducts.length === 0 && !loading && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="py-3 text-center text-xs text-slate-400 dark:text-slate-500"
+                      >
+                        No products match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-50">
+                  Worst products
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Lowest margin SKUs (filtered by your search).
+                </p>
+              </div>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                Showing {worstProducts.length}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-xs">
+                <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  <tr>
+                    <th className="py-2 pr-4">SKU</th>
+                    <th className="py-2 pr-4">Name</th>
+                    <th className="py-2 pr-4 text-right">Net profit</th>
+                    <th className="py-2 pr-2 text-right">Margin %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {worstProducts.map((product) => (
+                    <tr
+                      key={product.productId ?? product.sku ?? product.name}
+                      className="border-b border-slate-100 text-[11px] last:border-0 dark:border-slate-800"
+                    >
+                      <td className="py-2 pr-4 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                        {product.sku ? (
+                          <Link
+                            to={`/products/${encodeURIComponent(product.sku)}`}
+                            className="text-emerald-700 hover:underline dark:text-emerald-400"
+                          >
+                            {product.sku}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-slate-700 dark:text-slate-200">
+                        {product.name}
+                      </td>
+                      <td
+                        className={`py-2 pr-4 text-right ${
+                          product.netProfit > 0
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : product.netProfit < 0
+                              ? 'text-rose-600 dark:text-rose-400'
+                              : 'text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        {formatCurrency(product.netProfit)}
+                      </td>
+                      <td className="py-2 pr-2 text-right text-slate-700 dark:text-slate-200">
+                        {product.marginPercent?.toFixed(1) ?? '0.0'}%
+                      </td>
+                    </tr>
+                  ))}
+                  {worstProducts.length === 0 && !loading && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="py-3 text-center text-xs text-slate-400 dark:text-slate-500"
+                      >
+                        No products match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
         <section className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none">
           <div className="mb-3 flex items-center justify-between">
             <div>
@@ -185,7 +366,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.slice(0, 10).map((product) => (
+                  {filteredProducts.slice(0, 10).map((product) => (
                     <tr
                       key={product.productId ?? product.sku ?? product.name}
                       className="border-b border-slate-100 text-[11px] last:border-0 dark:border-slate-800"
@@ -215,13 +396,13 @@ export default function Dashboard() {
                       </td>
                     </tr>
                   ))}
-                  {products.length === 0 && !loading && (
+                  {filteredProducts.length === 0 && !loading && (
                     <tr>
                       <td
                         colSpan={5}
                         className="py-3 text-center text-xs text-slate-400 dark:text-slate-500"
                       >
-                        No product data yet. Import orders and costs to see profitability.
+                        No products match your search. Try clearing the filter.
                       </td>
                     </tr>
                   )}
