@@ -3,6 +3,9 @@ import Dashboard from './pages/Dashboard.jsx'
 import ReportsPage from './pages/ReportsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import SignupPage from './pages/SignupPage.jsx'
+import ProductsPage from './pages/ProductsPage.jsx'
+import OrdersPage from './pages/OrdersPage.jsx'
+import AdSpendPage from './pages/AdSpendPage.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
 import { TenantProvider } from './context/TenantContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
@@ -29,6 +32,30 @@ function App() {
               element={
                 <PrivateRoute>
                   <ReportsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <ProductsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <PrivateRoute>
+                  <OrdersPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/ad-spend"
+              element={
+                <PrivateRoute>
+                  <AdSpendPage />
                 </PrivateRoute>
               }
             />

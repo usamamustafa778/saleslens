@@ -4,6 +4,7 @@ import MetricCard from '../components/MetricCard.jsx'
 import SalesTrendChart from '../components/SalesTrendChart.jsx'
 import LayoutShell from '../components/LayoutShell.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 function formatCurrency(amount, currency = 'USD') {
   if (amount == null || Number.isNaN(amount)) return '—'
@@ -16,6 +17,7 @@ function formatCurrency(amount, currency = 'USD') {
 
 export default function Dashboard() {
   const { tenantId } = useTenant()
+  const { token } = useAuth()
   const [metrics, setMetrics] = useState({
     revenue: 0,
     cogs: 0,
@@ -38,10 +40,11 @@ export default function Dashboard() {
         setError(null)
 
         const qs = `?tenantId=${tenantId}`
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
         const [summaryRes, trendRes, productsRes] = await Promise.all([
-          fetch(`/api/dashboard/summary${qs}`),
-          fetch(`/api/dashboard/trend${qs}`),
-          fetch(`/api/products/profitability${qs}`),
+          fetch(`/api/dashboard/summary${qs}`, { headers }),
+          fetch(`/api/dashboard/trend${qs}`, { headers }),
+          fetch(`/api/products/profitability${qs}`, { headers }),
         ])
 
         if (!summaryRes.ok || !trendRes.ok || !productsRes.ok) {
@@ -86,7 +89,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [tenantId])
+  }, [tenantId, token])
 
   const profitTone = useMemo(
     () => (metrics.netProfit > 0 ? 'positive' : metrics.netProfit < 0 ? 'negative' : 'neutral'),
@@ -94,7 +97,10 @@ export default function Dashboard() {
   )
 
   return (
-    <LayoutShell>
+    <LayoutShell
+      title="ProfitDesk Overview"
+      subtitle="Live profitability snapshot powered by your orders, costs, and ad spend."
+    >
       <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <div className="relative flex-1">

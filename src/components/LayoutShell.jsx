@@ -1,8 +1,34 @@
 import DashboardHeader from './DashboardHeader.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { NavLink } from 'react-router-dom'
 
-export default function LayoutShell({ children }) {
+function NavItem({ to, children }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        [
+          'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left',
+          isActive
+            ? 'bg-slate-900 text-slate-50'
+            : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-50',
+        ].join(' ')
+      }
+    >
+      <span>{children}</span>
+      {({ isActive }) =>
+        isActive ? <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> : null
+      }
+    </NavLink>
+  )
+}
+
+export default function LayoutShell({
+  children,
+  title = 'ProfitDesk Overview',
+  subtitle = 'Live profitability snapshot powered by your orders, costs, and ad spend.',
+}) {
   const { tenants, tenantId, switchTenant } = useTenant()
   const { user, logout } = useAuth()
 
@@ -25,31 +51,11 @@ export default function LayoutShell({ children }) {
         </div>
 
         <nav className="space-y-1 text-sm">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between rounded-lg bg-slate-900 px-3 py-2 text-left text-slate-50"
-          >
-            <span>Dashboard</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-slate-400 hover:bg-slate-900/60 hover:text-slate-50"
-          >
-            <span>Products</span>
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-slate-400 hover:bg-slate-900/60 hover:text-slate-50"
-          >
-            <span>Orders</span>
-          </button>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-slate-400 hover:bg-slate-900/60 hover:text-slate-50"
-          >
-            <span>Ad spend</span>
-          </button>
+          <NavItem to="/dashboard">Dashboard</NavItem>
+          <NavItem to="/products">Products</NavItem>
+          <NavItem to="/orders">Orders</NavItem>
+          <NavItem to="/ad-spend">Ad spend</NavItem>
+          <NavItem to="/reports">Reports</NavItem>
         </nav>
 
         <div className="mt-auto pt-4 text-[11px] text-slate-500">
@@ -85,8 +91,8 @@ export default function LayoutShell({ children }) {
       <main className="flex-1 bg-slate-50 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
           <DashboardHeader
-            title="ProfitDesk Overview"
-            subtitle="Live profitability snapshot powered by your orders, costs, and ad spend."
+            title={title}
+            subtitle={subtitle}
           />
           {children}
         </div>

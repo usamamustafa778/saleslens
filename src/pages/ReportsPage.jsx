@@ -3,6 +3,7 @@ import LayoutShell from '../components/LayoutShell.jsx'
 import ReportFilters from '../components/ReportFilters.jsx'
 import ExportButton from '../components/ExportButton.jsx'
 import { useTenant } from '../context/TenantContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const PAGE_SIZE = 20
 
@@ -17,6 +18,7 @@ function formatCurrency(amount) {
 
 export default function ReportsPage() {
   const { tenantId } = useTenant()
+  const { token } = useAuth()
   const [filters, setFilters] = useState({})
   const [rows, setRows] = useState([])
   const [page, setPage] = useState(1)
@@ -40,7 +42,9 @@ export default function ReportsPage() {
         if (filters.channel) params.append('channel', filters.channel)
         if (filters.query) params.append('query', filters.query)
 
-        const res = await fetch(`/api/reports?${params.toString()}`)
+        const res = await fetch(`/api/reports?${params.toString()}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
 
         if (!res.ok) {
           throw new Error('Failed to load reports')
@@ -65,7 +69,7 @@ export default function ReportsPage() {
     return () => {
       cancelled = true
     }
-  }, [filters, tenantId])
+  }, [filters, tenantId, token])
 
   const sortedRows = useMemo(() => {
     const copy = [...rows]
@@ -123,7 +127,9 @@ export default function ReportsPage() {
       if (filters.channel) params.append('channel', filters.channel)
       if (filters.query) params.append('query', filters.query)
 
-      const res = await fetch(`/api/reports/export?${params.toString()}`)
+      const res = await fetch(`/api/reports/export?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       if (!res.ok) throw new Error('Export failed')
 
       const blob = await res.blob()
@@ -146,7 +152,10 @@ export default function ReportsPage() {
   }
 
   return (
-    <LayoutShell>
+    <LayoutShell
+      title="Reports"
+      subtitle="Filter, export, and audit profitability across channels."
+    >
       <ReportFilters
         loading={loading}
         onChange={(next) => setFilters(next)}
