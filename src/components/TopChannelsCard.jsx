@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts'
 import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 
 function formatMoney(value) {
   if (value == null || Number.isNaN(value)) return '—'
@@ -20,11 +21,45 @@ function formatMoney(value) {
 }
 
 export default function TopChannelsCard({ channels, loading }) {
-  const data = (channels || []).slice(0, 8).map((c) => ({
+  const [sort, setSort] = useState({ key: 'revenue', dir: 'desc' })
+
+  const sorted = useMemo(() => {
+    const copy = [...(channels || [])]
+    copy.sort((a, b) => {
+      const av = Number(a?.[sort.key] ?? 0)
+      const bv = Number(b?.[sort.key] ?? 0)
+      return sort.dir === 'asc' ? av - bv : bv - av
+    })
+    return copy
+  }, [channels, sort])
+
+  const data = sorted.slice(0, 8).map((c) => ({
     channel: c.channel,
     revenue: c.revenue ?? 0,
     netProfit: c.netProfit ?? 0,
   }))
+
+  function toggleSort(key) {
+    setSort((current) => {
+      if (current.key === key) {
+        return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, dir: 'desc' }
+    })
+  }
+
+  function SortIcon({ active, dir }) {
+    return (
+      <span
+        className={`ml-1 inline-block text-[10px] ${
+          active ? 'text-slate-700 dark:text-slate-200' : 'text-slate-300 dark:text-slate-600'
+        }`}
+        aria-hidden="true"
+      >
+        {active ? (dir === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    )
+  }
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none">
@@ -78,16 +113,46 @@ export default function TopChannelsCard({ channels, loading }) {
             <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <tr>
                 <th className="px-3 py-2">Channel</th>
-                <th className="px-3 py-2 text-right">Revenue</th>
-                <th className="px-3 py-2 text-right">Net profit</th>
-                <th className="px-3 py-2 text-right">Margin</th>
+                <th className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => toggleSort('revenue')}
+                    className="inline-flex items-center hover:text-slate-700 dark:hover:text-slate-200"
+                    title="Sort by revenue"
+                  >
+                    Revenue
+                    <SortIcon active={sort.key === 'revenue'} dir={sort.dir} />
+                  </button>
+                </th>
+                <th className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => toggleSort('netProfit')}
+                    className="inline-flex items-center hover:text-slate-700 dark:hover:text-slate-200"
+                    title="Sort by net profit"
+                  >
+                    Net profit
+                    <SortIcon active={sort.key === 'netProfit'} dir={sort.dir} />
+                  </button>
+                </th>
+                <th className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => toggleSort('marginPercent')}
+                    className="inline-flex items-center hover:text-slate-700 dark:hover:text-slate-200"
+                    title="Sort by margin %"
+                  >
+                    Margin
+                    <SortIcon active={sort.key === 'marginPercent'} dir={sort.dir} />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {(channels || []).slice(0, 8).map((c) => (
+              {sorted.slice(0, 8).map((c) => (
                 <tr
                   key={c.channel}
-                  className="border-b border-slate-100 text-[11px] last:border-0 dark:border-slate-900"
+                  className="border-b border-slate-100 text-[11px] last:border-0 hover:bg-slate-50 dark:border-slate-900 dark:hover:bg-slate-900/40"
                 >
                   <td className="px-3 py-2">
                     <Link
@@ -108,10 +173,20 @@ export default function TopChannelsCard({ channels, loading }) {
                           ? 'text-rose-600 dark:text-rose-400'
                           : 'text-slate-700 dark:text-slate-200'
                     }`}
+                    title="Net profit"
                   >
                     {formatMoney(c.netProfit)}
                   </td>
-                  <td className="px-3 py-2 text-right text-slate-700 dark:text-slate-200">
+                  <td
+                    className={`px-3 py-2 text-right ${
+                      (c.marginPercent ?? 0) < 0
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : (c.marginPercent ?? 0) >= 30
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-700 dark:text-slate-200'
+                    }`}
+                    title="Margin %"
+                  >
                     {(c.marginPercent ?? 0).toFixed(1)}%
                   </td>
                 </tr>

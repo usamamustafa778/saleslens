@@ -133,7 +133,8 @@ export default function Dashboard() {
       title="ProfitDesk Overview"
       subtitle="Live profitability snapshot powered by your orders, costs, and ad spend."
     >
-      <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
+      <div className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-slate-50/80 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
+        <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-100 transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900/70 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <div className="relative flex-1">
               <input
@@ -145,7 +146,7 @@ export default function Dashboard() {
               />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               className="inline-flex h-9 items-center rounded-lg border border-dashed border-slate-300 px-3 text-xs font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
@@ -155,6 +156,7 @@ export default function Dashboard() {
             </button>
           </div>
         </section>
+      </div>
 
         {error && (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
